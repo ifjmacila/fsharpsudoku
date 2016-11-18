@@ -27,6 +27,18 @@ let get (x, y) (arr: _[,]) = arr.[x, y]
 
 let pos = 3, 4
 
+let numbers = Set.ofSeq [1..9]
+
+let board=Map.empty
+ 
+for i in 0..8 do
+    for j in 0..8 do 
+       board.Add((i,j),numbers)
+         
+         
+
+        
+
 let e = board |> get pos
 related(2,2) |> List.ofSeq
  |> List.length
