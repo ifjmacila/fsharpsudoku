@@ -15,7 +15,8 @@ let related (x, y) =
             for j in y/3 .. y/3 + 2 
              ->(i,j)
     } |> Set.ofSeq |> Set.remove (x,y)
-   
+//   csinálni kell egy seq-et, ami az inputban azokat az elemeket tartalmazza, amik nem üresek
+//csinálni kell egy seq fold-ot, aminél az állapot a board, az elem ebből a seq-ből jön, és a függvény a fixcell
    
 let lines = System.IO.File.ReadAllLines("C:/Users/valaki/Desktop/input.txt")
 
@@ -48,9 +49,7 @@ let fixCell (board:Board) (pos, value) : Board =
         match board.[pos] with 
         | Open s -> board.Add(pos, Open(s.Remove(value)))
         | _ -> board) boardWithFixed
-//    for c in related(pos) do
-//        if board.TryFind.isNone then 
-         
+
 Array2D.
         
 
