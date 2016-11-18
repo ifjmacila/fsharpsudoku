@@ -8,12 +8,13 @@ type Cell =
 type Board = Cell[,]
 
 let related (x, y) =
-    seq {for i  in 0..8 ->(i,y) }
-    seq {for i  in 0..8 ->(x,i) }    
+  
     seq {
-        for i  in x/3..x/3+2    
-            for j i ny/3..y/3+2
-             ->(x,y)}
+        for i  in 0..8 ->(i,y)
+        for i  in 0..8 ->(x,i)
+        for i  in x/3..x/3+2 do
+            for j in y/3..y/3+2 
+             ->(x,y)} |> Set.ofSeq |> Set.remove (x,y)
    
    
 let lines = System.IO.File.ReadAllLines("C:/Users/valaki/Desktop/input.txt")
