@@ -1,6 +1,7 @@
 ﻿// Learn more about F# at http://fsharp.org
 // See the 'F# Tutorial' project for more help.
-
+//todo: fájl műveletek biztonságossá tétele (try with),parancssori argumentumok: input, output fájlnév,
+// teszt megírása, 
 type Cell =
     | Fixed of int
     | Open of Set<int>
@@ -12,12 +13,22 @@ type Cell =
         
 
 type Board = Map<int * int, Cell>
-   
-let printBoard (board:Board) =
-    for i = 0 to 8 do
-        for j = 0 to 8 do
-            printf "%O" board.[i,j]
-        printfn ""
+
+let boardToArray (board:Board)=
+  
+    Array2D.init 9 9 (fun i j ->
+        match board.[i,j] with
+        | Fixed f -> f
+        |_->0)
+     
+let printBoard (board:Board option) =
+    match board with
+    |Some b-> 
+        for i = 0 to 8 do
+            for j = 0 to 8 do
+                printf "%O" b.[i,j]
+            printfn ""
+    |_->printfn"invalid input!"
         
 type Guess =
     | NextBoard of Board 
@@ -34,24 +45,48 @@ let related (x, y) =
             for j in jb.. jb + 2 
              ->(i,j)
     } |> Set.ofSeq |> Set.remove (x,y)
-//   csinálni kell egy seq-et, ami az inputban azokat az elemeket tartalmazza, amik nem üresek
-//csinálni kell egy seq fold-ot, aminél az állapot a board, az elem ebből a seq-ből jön, és a függvény a fixcell
+
    
+type Result<'a> =
+    | Ok of 'a
+    | Error of string
+
 __SOURCE_DIRECTORY__
 
 open System.IO 
 System.Environment.CurrentDirectory
 
-let lines =File.ReadAllLines(Path.Combine (__SOURCE_DIRECTORY__,"input.txt"))
 
+//let readInput (argv:string[]) = 
+//    match argv with
+
+    
+ 
+ //   try
+
+        File.ReadAllLines(Path.Combine (dir,filename))
+//    with
+//    | :? FileNotFoundException as ex -> None
+ //   | :? DirectoryNotFoundException as ex -> None
+
+let lines  =
+//    try
+        File.ReadAllLines(Path.Combine (__SOURCE_DIRECTORY__,"input.txt"))
+//    with
+//    | :? FileNotFoundException as ex -> None
+//    | :? DirectoryNotFoundException as ex -> None
 
             
-let input = 
-    Array2D.init 9 9 (fun i j ->
-        match (int)lines.[i].[j .. j] with
-        | x when x>0 -> Some x 
-        | _ -> None ) 
-let input2= 
+let input (lines:string[])= 
+    try
+        Array2D.init 9 9 (fun i j ->
+            match (int)lines.[i].[j .. j] with
+            | x when x>0 -> Some x 
+            | _ -> None )
+        |> Some 
+    with _ -> None
+ 
+let input2 (lines:string[])= 
     seq {
         for i  in 0..8  do  
             for j in 0..8 do
@@ -78,7 +113,7 @@ let fixCell (board:Board) (pos, value) : Board =
         | Open s -> board.Add(pos, Open(s.Remove(value)))
         | _ -> board) boardWithFixed
 
-let startingBoard = input2 |> List.fold fixCell emptyBoard 
+let startingBoard = input2 lines |> List.fold fixCell emptyBoard 
         
 let nextGuess (board:Board) :Guess =
     let opens=  board |>Map.toSeq |>Seq.choose  (fun cell ->
@@ -93,7 +128,7 @@ let nextGuess (board:Board) :Guess =
     |_ -> (pos,set) |> NextGuess
     
 
-let nextBoard = nextGuess startingBoard
+//let nextBoard = nextGuess startingBoard 
 
 let rec solve (board:Board) = 
     let rec solveGuess (guess:Guess)=
@@ -113,12 +148,9 @@ let rec solve (board:Board) =
     |Complete g -> Some g
     |_ -> None
 
-        
-solve startingBoard |>Option.iter printBoard     
+   
     
-solve emptyBoard |>Option.iter printBoard     
-    
-
+ // solve emptyBoard |>Option.iter printBoard  
 
 //let e = board |> get pos
 //related(2,2) |> List.ofSeq
@@ -129,6 +161,10 @@ let arr2 = Array2D.zeroCreate<int> 9 9
 arr2.[0 .. 2, 0 .. 2]
 
 [<EntryPoint>]
-let main argv = 
-    printfn "%A" argv
+let main argv =
+    
+    solve startingBoard  |> printBoard 
+    solve emptyBoard |> printBoard  
+    solve startingBoard 
+    
     0 // return an integer exit code
