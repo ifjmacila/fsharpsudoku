@@ -1,7 +1,8 @@
 ﻿// Learn more about F# at http://fsharp.org
 // See the 'F# Tutorial' project for more help.
-//todo: fájl műveletek biztonságossá tétele (try with),parancssori argumentumok: input, output fájlnév,
-// teszt megírása, 
+//todo: get input and output filenames as command line arguments
+//todo: write output to file
+
 type Cell =
     | Fixed of int
     | Open of Set<int>
@@ -14,13 +15,14 @@ type Cell =
 
 type Board = Map<int * int, Cell>
 
-let boardToArray (board:Board)=
-  
-    Array2D.init 9 9 (fun i j ->
-        match board.[i,j] with
-        | Fixed f -> f
-        |_->0)
-     
+let boardToArray (board:Board option)=
+  match board with
+    |Some board-> 
+        Array2D.init 9 9 (fun i j ->
+            match board.[i,j] with
+            | Fixed f -> f
+            |_->0)
+     |_->failwith "No Board!"
 let printBoard (board:Board option) =
     match board with
     |Some b-> 
@@ -57,24 +59,20 @@ open System.IO
 System.Environment.CurrentDirectory
 
 
-//let readInput (argv:string[]) = 
-//    match argv with
-
-    
- 
- //   try
-
-        File.ReadAllLines(Path.Combine (dir,filename))
-//    with
-//    | :? FileNotFoundException as ex -> None
- //   | :? DirectoryNotFoundException as ex -> None
-
+//let readInput (dirname:string) (filename:string): string[] option = 
+//    
+//        try
+//            Some (File.ReadAllLines(Path.Combine (dirname,filename)))
+//        with
+//        | :? FileNotFoundException as ex -> None
+//        | :? DirectoryNotFoundException as ex -> None
+//   
 let lines  =
-//    try
-        File.ReadAllLines(Path.Combine (__SOURCE_DIRECTORY__,"input.txt"))
-//    with
-//    | :? FileNotFoundException as ex -> None
-//    | :? DirectoryNotFoundException as ex -> None
+    try
+      Some (File.ReadAllLines(Path.Combine (__SOURCE_DIRECTORY__,"input.txt")))
+    with
+    | :? FileNotFoundException as ex -> None
+    | :? DirectoryNotFoundException as ex -> None
 
             
 let input (lines:string[])= 
@@ -86,12 +84,15 @@ let input (lines:string[])=
         |> Some 
     with _ -> None
  
-let input2 (lines:string[])= 
-    seq {
-        for i  in 0..8  do  
-            for j in 0..8 do
-               if (int)lines.[i].[j .. j]>0  then yield((i,j),(int)lines.[i].[j .. j])
-    } |>Seq.toList
+let input2 (lines:string[] option)= 
+    match lines with   
+    | Some lines -> 
+        seq {
+             for i  in 0..8  do  
+                 for j in 0..8 do
+                   if (int)lines.[i].[j .. j]>0  then yield((i,j),(int)lines.[i].[j .. j])
+          } |>Seq.toList
+    |_ ->failwith "No input file found!"
 
 let numbers = Set { 1 .. 9 }
 
@@ -155,15 +156,51 @@ let rec solve (board:Board) =
 //let e = board |> get pos
 //related(2,2) |> List.ofSeq
 // |> List.length
+let testPart (part:int[]) =
+   part |> Set.ofArray |> Set.count  |> (fun x->
+            match x with
+            |9 -> true
+            |_-> false  )
 
-let arr2 = Array2D.zeroCreate<int> 9 9
 
-arr2.[0 .. 2, 0 .. 2]
+let testPart2 (part:int[,])=
+    seq {
+        for i = 0 to 2 do
+            for j = 0 to 2 do
+                yield part.[i,j]
+        } |> Set.ofSeq |> Set.count |> (fun x->
+            match x with
+            |9 -> true
+            |_-> false  )
+        
+let testBoard (board:int[,]):bool=
+  let mutable result= true
+  for i=0 to 8 do
+   if not (board.[i,0..8]|>testPart) then result<-false  
+  for j=0 to 8 do
+       if not (board.[0..8,j]|>testPart) then  result<-false 
+  if not (board.[0..2,0..2]|>testPart2) then  result<-false  
+  if not (board.[0..2,3..5]|>testPart2) then  result<-false 
+  if not (board.[0..2,6..8]|>testPart2) then  result<-false 
+  if not (board.[3..5,0..2]|>testPart2) then  result<-false                 
+  if not (board.[3..5,3..5]|>testPart2) then  result<-false 
+  if not (board.[3..5,6..8]|>testPart2) then  result<-false   
+  if not (board.[6..8,0..2]|>testPart2) then  result<-false                  
+  if not (board.[6..8,3..5]|>testPart2) then  result<-false 
+  if not (board.[6..8,6..8]|>testPart2) then  result<-false 
+  result
+
+//let arr2 = Array2D.zeroCreate<int> 9 9
+
+//arr2.[0 .. 2, 0 .. 2]
+
 
 [<EntryPoint>]
 let main argv =
-    
+   
+
     solve startingBoard  |> printBoard 
+    solve startingBoard |> boardToArray |> testBoard
     solve emptyBoard |> printBoard  
     solve startingBoard 
     
